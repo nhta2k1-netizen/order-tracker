@@ -118,37 +118,51 @@ export async function fetchGhnTracking(trackingNumber) {
   };
 }
 
+function asText(v) {
+  if (v == null || v === "") return "";
+  if (typeof v === "string" || typeof v === "number") return String(v);
+  if (typeof v === "object") {
+    return (
+      v.name ||
+      v.warehouse_name ||
+      v.location_name ||
+      v.title ||
+      v.label ||
+      ""
+    );
+  }
+  return "";
+}
+
 function normalizeLog(item) {
   if (!item || typeof item !== "object") return null;
 
   const statusRaw = item.status || item.status_code || "";
   const status =
-    item.status_name ||
-    item.status_ops_name ||
-    item.status_transiting_name ||
-    statusRaw ||
+    asText(item.status_name) ||
+    asText(item.status_ops_name) ||
+    asText(item.status_transiting_name) ||
+    asText(statusRaw) ||
     "Cập nhật";
 
   const messageParts = [
-    item.content,
-    item.detail,
-    item.description,
-    item.reason,
-    item.note,
-  ].filter((x) => x && String(x).trim());
+    asText(item.content),
+    asText(item.detail),
+    asText(item.description),
+    asText(item.reason),
+    asText(item.note),
+  ].filter((x) => x && x.trim());
 
   const warehouse =
-    item.warehouse_name ||
-    item.location ||
-    item.current_warehouse_name ||
-    null;
+    asText(item.warehouse_name) ||
+    asText(item.location) ||
+    asText(item.current_warehouse_name) ||
+    "";
 
   let message =
-    messageParts.join(" — ") ||
-    String(status) ||
-    "Cập nhật trạng thái";
+    messageParts.join(" — ") || status || "Cập nhật trạng thái";
 
-  if (warehouse && !String(message).includes(String(warehouse))) {
+  if (warehouse && !message.includes(warehouse)) {
     message = `${message} (${warehouse})`;
   }
 
@@ -163,9 +177,9 @@ function normalizeLog(item) {
 
   return {
     status: String(status),
-    statusRaw: statusRaw ? String(statusRaw) : String(status),
+    statusRaw: statusRaw ? asText(statusRaw) || String(status) : String(status),
     message: String(message),
-    location: warehouse ? String(warehouse) : null,
+    location: warehouse || null,
     timestamp: iso,
     timestampUnix: unix,
   };
