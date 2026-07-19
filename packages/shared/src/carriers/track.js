@@ -97,8 +97,12 @@ export async function trackPackage(trackingNumber, opts = {}) {
       return unsupportedCarrier(tracking, detected);
 
     default:
+      // Mã VNGH… = GHN (sàn TMĐT)
+      if (/^VNGH/i.test(tracking)) {
+        return fetchGhnTracking(tracking);
+      }
       // Thử SPX trước (nhiều mã Shopee dạng SPXVN / VN…)
-      if (/^SPX|^VN\d/i.test(tracking)) {
+      if (/^SPX/i.test(tracking) || /^VN\d/i.test(tracking)) {
         const spx = await fetchSpxTracking(tracking);
         if (spx.ok) return spx;
       }

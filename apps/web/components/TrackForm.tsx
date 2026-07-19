@@ -68,11 +68,10 @@ export function TrackForm({ value, loading, onChange, onSubmit }: Props) {
       <p className="mt-3 text-center text-sm text-slate-500 sm:text-left">
         Hỗ trợ:{" "}
         <span className="font-medium text-slate-700">
-          SPX, GHN, J&amp;T
+          SPX, GHN (VNGH…), J&amp;T
         </span>
         . J&amp;T nếu cần:{" "}
-        <span className="font-mono text-slate-600">MÃ|4sốSĐT</span> (vd{" "}
-        <span className="font-mono text-slate-600">84…|1234</span>).
+        <span className="font-mono text-slate-600">MÃ|4sốSĐT</span>.
       </p>
     </form>
   );

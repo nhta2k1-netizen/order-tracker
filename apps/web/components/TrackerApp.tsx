@@ -75,7 +75,7 @@ export function TrackerApp() {
           Order Tracker
         </h1>
         <p className="mx-auto mt-3 max-w-md text-balance text-sm leading-relaxed text-slate-600 sm:text-base">
-          Theo dõi đơn Shopee / SPX chỉ bằng mã vận đơn — không cần mở app.
+          Theo dõi SPX, GHN, J&amp;T chỉ bằng mã vận đơn — không cần mở app.
         </p>
       </header>
 

@@ -111,8 +111,12 @@ export function detectCarrier(trackingNumber) {
     };
   }
 
-  // GHN — thường 9–12 chữ số hoặc GHN…
-  if (/^GHN/i.test(code)) {
+  // GHN — GHN…, VNGH… (mã sàn Shopee/TikTok), hoặc 9–12 chữ số
+  if (
+    /^GHN/i.test(code) ||
+    /^VNGH/i.test(code) || // vd VNGH80613847802
+    /^G[A-Z]?\d{8,}$/i.test(code) // một số mã GHN dạng G…
+  ) {
     return { ...CARRIER_MAP.ghn, confidence: "high" };
   }
   if (/^\d{9,12}$/.test(code)) {

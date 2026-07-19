@@ -3,7 +3,7 @@
  */
 
 const TRACKING_CANDIDATE =
-  /\b([A-Z]{2,6}\d{8,}[A-Z0-9]*|\d{8,14}|SPXVN[A-Z0-9]+|SPX[A-Z0-9]+|JT\d+[A-Z0-9]*|GHTK[A-Z0-9]+|GHN[A-Z0-9]+|VN\d{10,}[A-Z0-9]*|NVVN[A-Z0-9]+|BE\d+[A-Z0-9]*)\b/gi;
+  /\b([A-Z]{2,6}\d{8,}[A-Z0-9]*|\d{8,14}|SPXVN[A-Z0-9]+|SPX[A-Z0-9]+|VNGH[A-Z0-9]+|JT\d+[A-Z0-9]*|GHTK[A-Z0-9]+|GHN[A-Z0-9]+|VN\d{10,}[A-Z0-9]*|NVVN[A-Z0-9]+|BE\d+[A-Z0-9]*)\b/gi;
 
 /** Query params thường chứa mã vận đơn trên link */
 const URL_PARAM_KEYS = [
