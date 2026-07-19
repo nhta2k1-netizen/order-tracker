@@ -1,0 +1,28 @@
+# Bot Telegram 24/7 — build từ root monorepo
+FROM node:20-bookworm-slim
+
+WORKDIR /app
+
+# better-sqlite3 cần build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json ./
+COPY apps/bot/package.json ./apps/bot/
+COPY packages/db/package.json ./packages/db/
+COPY packages/shared/package.json ./packages/shared/
+
+RUN npm ci --omit=dev --workspace=@order-tracker/bot --include-workspace-root
+
+COPY packages ./packages
+COPY apps/bot ./apps/bot
+
+ENV NODE_ENV=production
+ENV DATA_DIR=/data
+
+# Volume gắn /data để không mất SQLite khi restart
+VOLUME ["/data"]
+
+WORKDIR /app
+CMD ["npm", "run", "bot"]

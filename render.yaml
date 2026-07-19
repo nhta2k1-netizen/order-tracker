@@ -1,0 +1,20 @@
+# Deploy bot trên Render: Dashboard → New → Blueprint → chọn repo này
+# Hoặc tạo Background Worker thủ công (xem HUONG-DAN-BOT-24-7.md)
+services:
+  - type: worker
+    name: order-tracker-bot
+    runtime: node
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm run bot
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: DATA_DIR
+        value: /opt/render/project/src/data
+      - key: POLL_INTERVAL_MINUTES
+        value: "10"
+      - key: NODE_VERSION
+        value: "20"
