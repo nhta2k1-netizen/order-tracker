@@ -14,21 +14,27 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q") || "";
-  return handleTrack(q);
+  const phone =
+    req.nextUrl.searchParams.get("phone") ||
+    req.nextUrl.searchParams.get("cellphone") ||
+    "";
+  return handleTrack(q, phone);
 }
 
 export async function POST(req: NextRequest) {
   let q = "";
+  let phone = "";
   try {
     const body = await req.json();
     q = String(body?.q || body?.tracking || body?.code || "");
+    phone = String(body?.phone || body?.cellphone || body?.phoneLast4 || "");
   } catch {
     q = "";
   }
-  return handleTrack(q);
+  return handleTrack(q, phone);
 }
 
-async function handleTrack(raw: string) {
+async function handleTrack(raw: string, phoneLast4?: string | null) {
   const input = String(raw || "").trim();
   if (!input) {
     return NextResponse.json(
@@ -37,9 +43,18 @@ async function handleTrack(raw: string) {
     );
   }
 
+  // J&T: cho phép "MÃ 1234" / "MÃ|1234" (4 số cuối SĐT)
+  let phone = phoneLast4 ? String(phoneLast4).replace(/\D/g, "").slice(-4) : "";
+  const withPhone = input.match(/^(.+?)[|\s,]+(\d{4})\s*$/);
+  let queryForExtract = input;
+  if (withPhone) {
+    queryForExtract = withPhone[1].trim();
+    if (!phone) phone = withPhone[2];
+  }
+
   const code =
-    extractFirstTrackingNumber(input) ||
-    input.replace(/\s+/g, "").toUpperCase();
+    extractFirstTrackingNumber(queryForExtract) ||
+    queryForExtract.replace(/\s+/g, "").toUpperCase();
 
   if (code.length < 8) {
     return NextResponse.json(
@@ -53,7 +68,9 @@ async function handleTrack(raw: string) {
   }
 
   try {
-    const result = await trackPackage(code);
+    const result = await trackPackage(phone ? `${code}|${phone}` : code, {
+      phoneLast4: phone || undefined,
+    });
     // Không trả raw SPX (nặng + không cần UI)
     const { raw: _raw, ...safe } = result as typeof result & { raw?: unknown };
     const detected = detectCarrier(code);

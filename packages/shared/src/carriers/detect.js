@@ -95,18 +95,29 @@ export function detectCarrier(trackingNumber) {
     return { ...CARRIER_MAP.ghtk, confidence: /^GHTK/i.test(code) ? "high" : "medium" };
   }
 
+  // J&T Express VN — ưu tiên trước GHN (mã hay 12 số bắt đầu 84)
+  if (
+    /^JT/i.test(code) ||
+    /^JTE/i.test(code) ||
+    /^J&T/i.test(code) ||
+    /^80\d{10,}$/.test(code) ||
+    /^84\d{10}$/.test(code) || // ví dụ trang J&T: 841000072647
+    /^\d{10,14}-\d{3}$/.test(code) // bill con: xxxxx-001
+  ) {
+    return {
+      ...CARRIER_MAP.jnt,
+      confidence:
+        /^JT/i.test(code) || /^84\d{10}$/.test(code) ? "high" : "medium",
+    };
+  }
+
   // GHN — thường 9–12 chữ số hoặc GHN…
   if (/^GHN/i.test(code)) {
     return { ...CARRIER_MAP.ghn, confidence: "high" };
   }
   if (/^\d{9,12}$/.test(code)) {
-    // GHN hay dùng dãy số — medium
+    // GHN hay dùng dãy số — medium (12 số không 84 đã bắt J&T ở trên)
     return { ...CARRIER_MAP.ghn, confidence: "medium" };
-  }
-
-  // J&T
-  if (/^JT/i.test(code) || /^JTE/i.test(code) || /^80\d{10,}$/.test(code)) {
-    return { ...CARRIER_MAP.jnt, confidence: /^JT/i.test(code) ? "high" : "medium" };
   }
 
   // Ninja Van VN

@@ -5,6 +5,7 @@
 import { detectCarrier } from "./detect.js";
 import { fetchSpxTracking } from "./spx.js";
 import { fetchGhnTracking } from "./ghn.js";
+import { fetchJntTracking } from "./jnt.js";
 
 /**
  * @typedef {object} TrackingEvent
@@ -67,9 +68,22 @@ export async function trackPackage(trackingNumber, opts = {}) {
     case "ghn":
       return fetchGhnTracking(tracking);
 
+    case "jnt": {
+      // Hỗ trợ "MÃ|1234" hoặc opts.phoneLast4
+      const phoneOpt = opts.phoneLast4 || null;
+      const jnt = await fetchJntTracking(trackingNumber, {
+        phoneLast4: phoneOpt,
+      });
+      // 12 số không ra → thử GHN (tránh nhầm carrier)
+      if (!jnt.ok && /^\d{9,12}$/.test(tracking) && !/^84\d{10}$/.test(tracking)) {
+        const ghn = await fetchGhnTracking(tracking);
+        if (ghn.ok) return ghn;
+      }
+      return jnt;
+    }
+
     // Các carrier khác — phase sau
     case "ghtk":
-    case "jnt":
     case "viettelpost":
     case "ninjavan":
     case "best":
@@ -81,10 +95,21 @@ export async function trackPackage(trackingNumber, opts = {}) {
         const spx = await fetchSpxTracking(tracking);
         if (spx.ok) return spx;
       }
-      // Mã số thuần 9–12 số: thử GHN (hay dùng dãy số)
+      // 84… 12 số: J&T
+      if (/^84\d{10}$/.test(tracking)) {
+        return fetchJntTracking(trackingNumber, {
+          phoneLast4: opts.phoneLast4,
+        });
+      }
+      // Mã số thuần 9–12 số: thử GHN rồi J&T
       if (/^\d{9,12}$/.test(tracking)) {
         const ghn = await fetchGhnTracking(tracking);
         if (ghn.ok) return ghn;
+        const jnt = await fetchJntTracking(trackingNumber, {
+          phoneLast4: opts.phoneLast4,
+        });
+        if (jnt.ok) return jnt;
+        return ghn;
       }
       return {
         ok: false,
@@ -97,7 +122,7 @@ export async function trackPackage(trackingNumber, opts = {}) {
         events: [],
         raw: null,
         error:
-          "Chưa nhận diện được đơn vị vận chuyển. Hỗ trợ: Shopee Express (SPXVN…), GHN (mã đơn GHN).",
+          "Chưa nhận diện ĐVVC. Hỗ trợ: SPX (SPXVN…), GHN, J&T (thêm 4 số SĐT nếu cần: MÃ|1234).",
       };
   }
 }

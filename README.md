@@ -116,7 +116,8 @@ Hoặc dán thẳng mã / link đơn hàng.
 |---------|------------|
 | Shopee Express (SPX) | ✅ API public |
 | GHN (Giao Hàng Nhanh) | ✅ API public donhang.ghn.vn |
-| GHTK, J&T, Viettel, Ninja, Best | 🔜 detect OK, tracker phase sau |
+| J&T Express VN | ✅ jtexpress.vn (có thể cần 4 số cuối SĐT: `MÃ|1234`) |
+| GHTK, Viettel, Ninja, Best | 🔜 detect OK, tracker phase sau |
 | TikTok Shop (thường SPX/J&T/…) | 🔜 qua mã ĐVVC |
 
 | Kênh | Trạng thái |

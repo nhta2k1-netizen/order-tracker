@@ -68,9 +68,11 @@ export function TrackForm({ value, loading, onChange, onSubmit }: Props) {
       <p className="mt-3 text-center text-sm text-slate-500 sm:text-left">
         Hỗ trợ:{" "}
         <span className="font-medium text-slate-700">
-          Shopee Express (SPXVN…), GHN
+          SPX, GHN, J&amp;T
         </span>
-        . Có thể dán mã hoặc link tracking.
+        . J&amp;T nếu cần:{" "}
+        <span className="font-mono text-slate-600">MÃ|4sốSĐT</span> (vd{" "}
+        <span className="font-mono text-slate-600">84…|1234</span>).
       </p>
     </form>
   );
