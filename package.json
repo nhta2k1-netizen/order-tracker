@@ -13,7 +13,8 @@
     "api": "npm run start -w @order-tracker/api",
     "api:dev": "npm run dev -w @order-tracker/api",
     "web": "npm run dev -w @order-tracker/web",
-    "zalo": "npm run start -w @order-tracker/api"
+    "zalo": "npm run start -w @order-tracker/api",
+    "start": "npm run bot"
   },
   "engines": {
     "node": ">=20"

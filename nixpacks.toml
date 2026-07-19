@@ -1,0 +1,9 @@
+# Cài tool build cho better-sqlite3 trên Railway
+[phases.setup]
+nixPkgs = ["nodejs_20", "python3", "gcc", "gnumake"]
+
+[phases.install]
+cmds = ["npm install"]
+
+[start]
+cmd = "npm run bot"

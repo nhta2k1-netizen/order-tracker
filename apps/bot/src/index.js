@@ -45,9 +45,18 @@ const allowed = (process.env.TELEGRAM_ALLOWED_CHAT_IDS || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
+// Railway/Render: set DATA_DIR=/data hoặc dùng /tmp nếu không ghi được ./data
 const dataDir =
-  process.env.DATA_DIR || path.resolve(__dirname, "../../../data");
-initDb({ dataDir });
+  process.env.DATA_DIR ||
+  process.env.RAILWAY_VOLUME_MOUNT_PATH ||
+  path.resolve(__dirname, "../../../data");
+try {
+  initDb({ dataDir });
+} catch (err) {
+  console.error("[bot] Không mở được DB tại", dataDir, err.message);
+  console.error("[bot] Thử DATA_DIR=/tmp/order-tracker-data");
+  initDb({ dataDir: "/tmp/order-tracker-data" });
+}
 
 const bot = new Telegraf(token);
 
