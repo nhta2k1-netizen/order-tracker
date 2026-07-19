@@ -2,11 +2,11 @@
  * Order Tracker — Telegram Bot
  *
  * Chạy:
- *   1. cp .env.example .env  → điền TELEGRAM_BOT_TOKEN
- *   2. npm install (từ root monorepo)
- *   3. npm run bot
+ *   bash scripts/start-bot.sh
+ *   hoặc: npm run bot
  *
- * Tạo bot: Telegram → @BotFather → /newbot
+ * Lưu ý Telegraf 4: bot.launch() Promise chỉ xong khi bot DỪNG.
+ * Dùng callback onLaunch (tham số 2) để biết bot đã sẵn sàng.
  */
 import path from "path";
 import { fileURLToPath } from "url";
@@ -26,7 +26,6 @@ import {
 import { startPoller, getPollerStatus } from "./poller.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// Load .env từ root monorepo hoặc apps/bot
 dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
@@ -35,27 +34,23 @@ if (!token) {
   console.error(
     "❌ Thiếu TELEGRAM_BOT_TOKEN.\n" +
       "   1. Mở Telegram → @BotFather → /newbot\n" +
-      "   2. Copy token vào file .env (xem .env.example)\n" +
+      "   2. Copy token vào file .env\n" +
       "   3. Chạy lại: npm run bot"
   );
   process.exit(1);
 }
 
-// Optional allow-list
 const allowed = (process.env.TELEGRAM_ALLOWED_CHAT_IDS || "")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
 
-// DB
 const dataDir =
-  process.env.DATA_DIR ||
-  path.resolve(__dirname, "../../../data");
+  process.env.DATA_DIR || path.resolve(__dirname, "../../../data");
 initDb({ dataDir });
 
 const bot = new Telegraf(token);
 
-// Middleware: log + allow-list
 bot.use(async (ctx, next) => {
   const chatId = String(ctx.chat?.id || ctx.from?.id || "");
   if (allowed.length > 0 && !allowed.includes(chatId)) {
@@ -74,8 +69,6 @@ bot.command("status", handleStatus);
 bot.command("list", handleList);
 bot.command("untrack", handleUntrack);
 bot.command("untrack_all", handleUntrackAll);
-
-// Gửi mã / link trực tiếp
 bot.on("text", handleText);
 
 bot.catch((err, ctx) => {
@@ -83,7 +76,6 @@ bot.catch((err, ctx) => {
   ctx?.reply?.("⚠️ Có lỗi xảy ra. Thử lại sau.").catch(() => {});
 });
 
-// Graceful stop
 async function shutdown(signal) {
   console.log(`[bot] ${signal} — dừng…`);
   try {
@@ -96,18 +88,71 @@ async function shutdown(signal) {
 process.once("SIGINT", () => shutdown("SIGINT"));
 process.once("SIGTERM", () => shutdown("SIGTERM"));
 
-// Launch
-bot
-  .launch({ dropPendingUpdates: true })
-  .then(() => {
-    const me = bot.botInfo;
-    console.log(
-      `[bot] ✅ @${me?.username || "?"} (id=${me?.id}) đang chạy long-polling`
-    );
-    startPoller(bot);
-    console.log("[bot] Poller:", getPollerStatus());
-  })
-  .catch((err) => {
-    console.error("[bot] Không khởi động được:", err.message);
-    process.exit(1);
-  });
+function onReady() {
+  const me = bot.botInfo;
+  console.log(
+    `[bot] ✅ @${me?.username || "?"} (id=${me?.id}) đang chạy long-polling`
+  );
+  startPoller(bot);
+  console.log("[bot] Poller:", JSON.stringify(getPollerStatus()));
+}
+
+/**
+ * Launch: callback thứ 2 = sau getMe, trước khi poll (đúng chỗ start poller).
+ * Promise của launch() chỉ settle khi bot stop → không dùng .then() cho "đã sẵn sàng".
+ */
+async function main() {
+  console.log("[bot] Đang kết nối Telegram…");
+
+  let attempt = 0;
+  const maxAttempts = 5;
+
+  while (attempt < maxAttempts) {
+    attempt += 1;
+    try {
+      // Không await launch hết vòng đời — chỉ fire + onReady
+      const launchPromise = bot.launch(
+        { dropPendingUpdates: true },
+        onReady
+      );
+
+      // Nếu 409, launch reject sớm. Nếu OK, promise treo đến khi stop (bình thường).
+      launchPromise.catch((err) => {
+        const msg = String(err?.message || err);
+        if (
+          msg.includes("409") ||
+          msg.toLowerCase().includes("conflict")
+        ) {
+          console.error(
+            "[bot] 409 Conflict — còn instance bot khác. Dừng bot cũ rồi chạy lại."
+          );
+          console.error(
+            "[bot]   bash scripts/start-bot.sh"
+          );
+        } else {
+          console.error("[bot] Lỗi polling:", msg);
+        }
+        process.exit(1);
+      });
+
+      // Đợi chút xem có reject ngay (409) không
+      await new Promise((r) => setTimeout(r, 2500));
+      // Nếu process còn sống và không exit → coi như OK
+      return;
+    } catch (err) {
+      const msg = String(err?.message || err);
+      const is409 =
+        msg.includes("409") || msg.toLowerCase().includes("conflict");
+      if (!is409 || attempt >= maxAttempts) {
+        console.error("[bot] Không khởi động được:", msg);
+        process.exit(1);
+      }
+      console.log(
+        `[bot] ⚠️ Conflict. Đợi ${attempt * 3}s rồi thử lại (${attempt}/${maxAttempts})…`
+      );
+      await new Promise((r) => setTimeout(r, attempt * 3000));
+    }
+  }
+}
+
+main();
