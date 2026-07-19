@@ -44,5 +44,7 @@ export type HistoryItem = {
   trackingNumber: string;
   carrierName?: string;
   currentStatus?: string | null;
+  /** Tên SP do user ghi (Shopee không public API) */
+  productName?: string | null;
   lookedAt: string;
 };

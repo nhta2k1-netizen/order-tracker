@@ -42,6 +42,11 @@ export function RecentHistory({ items, onSelect, onRemove, onClear }: Props) {
                   <p className="truncate font-mono text-sm font-semibold text-slate-800">
                     {item.trackingNumber}
                   </p>
+                  {item.productName ? (
+                    <p className="mt-0.5 truncate text-xs font-medium text-slate-700">
+                      🛍 {item.productName}
+                    </p>
+                  ) : null}
                   <p className="mt-0.5 truncate text-xs text-slate-500">
                     {item.carrierName || "—"}
                     {item.currentStatus ? (

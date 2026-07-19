@@ -2,12 +2,21 @@
 
 type Props = {
   value: string;
+  productName: string;
   loading: boolean;
   onChange: (v: string) => void;
+  onProductNameChange: (v: string) => void;
   onSubmit: () => void;
 };
 
-export function TrackForm({ value, loading, onChange, onSubmit }: Props) {
+export function TrackForm({
+  value,
+  productName,
+  loading,
+  onChange,
+  onProductNameChange,
+  onSubmit,
+}: Props) {
   return (
     <form
       className="w-full"
@@ -65,6 +74,31 @@ export function TrackForm({ value, loading, onChange, onSubmit }: Props) {
           )}
         </button>
       </div>
+
+      <div className="mt-3">
+        <label
+          htmlFor="product-name-input"
+          className="mb-1.5 block text-xs font-medium text-slate-500"
+        >
+          Tên sản phẩm (tuỳ chọn — copy từ Shopee)
+        </label>
+        <input
+          id="product-name-input"
+          type="text"
+          autoComplete="off"
+          placeholder="VD: Áo thun cotton form rộng…"
+          value={productName}
+          onChange={(e) => onProductNameChange(e.target.value)}
+          className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-brand-400 focus:shadow-glow"
+          disabled={loading}
+        />
+        <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+          Shopee / GHN / SPX <strong>không public</strong> tên SP qua mã vận đơn
+          (cần đăng nhập app). Ghi tay để dễ nhớ đơn — lưu trên trình duyệt của
+          bạn.
+        </p>
+      </div>
+
       <p className="mt-3 text-center text-sm text-slate-500 sm:text-left">
         Hỗ trợ:{" "}
         <span className="font-medium text-slate-700">
