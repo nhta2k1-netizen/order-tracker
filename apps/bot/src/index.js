@@ -7,8 +7,12 @@
  *
  * Lưu ý Telegraf 4: bot.launch() Promise chỉ xong khi bot DỪNG.
  * Dùng callback onLaunch (tham số 2) để biết bot đã sẵn sàng.
+ *
+ * Railway: mở HTTP nhỏ trên PORT để platform không kill container
+ * (bot long-polling không phải web server).
  */
 import path from "path";
+import http from "http";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import { Telegraf } from "telegraf";
@@ -97,6 +101,33 @@ async function shutdown(signal) {
 process.once("SIGINT", () => shutdown("SIGINT"));
 process.once("SIGTERM", () => shutdown("SIGTERM"));
 
+/** HTTP health cho Railway/Render (tránh Stopping Container ngay sau start). */
+function startHealthServer() {
+  const port = Number(process.env.PORT || 0);
+  if (!port) {
+    console.log("[bot] Không set PORT — bỏ health HTTP (OK cho chạy local)");
+    return;
+  }
+  const server = http.createServer((req, res) => {
+    if (req.url === "/health" || req.url === "/") {
+      res.writeHead(200, { "Content-Type": "application/json" });
+      res.end(
+        JSON.stringify({
+          ok: true,
+          bot: bot.botInfo?.username || null,
+          poller: getPollerStatus(),
+        })
+      );
+      return;
+    }
+    res.writeHead(404);
+    res.end("not found");
+  });
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`[bot] Health HTTP :${port} (Railway keep-alive)`);
+  });
+}
+
 function onReady() {
   const me = bot.botInfo;
   console.log(
@@ -104,6 +135,7 @@ function onReady() {
   );
   startPoller(bot);
   console.log("[bot] Poller:", JSON.stringify(getPollerStatus()));
+  startHealthServer();
 }
 
 /**
