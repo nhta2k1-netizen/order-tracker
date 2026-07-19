@@ -11,6 +11,7 @@ export {
 } from "./carriers/track.js";
 
 export { fetchSpxTracking, translateStatus } from "./carriers/spx.js";
+export { fetchGhnTracking } from "./carriers/ghn.js";
 
 export {
   extractTrackingNumbers,

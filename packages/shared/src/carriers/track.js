@@ -4,6 +4,7 @@
  */
 import { detectCarrier } from "./detect.js";
 import { fetchSpxTracking } from "./spx.js";
+import { fetchGhnTracking } from "./ghn.js";
 
 /**
  * @typedef {object} TrackingEvent
@@ -63,9 +64,11 @@ export async function trackPackage(trackingNumber, opts = {}) {
     case "spx":
       return fetchSpxTracking(tracking);
 
-    // Các carrier khác — phase 2 (Playwright / API public)
-    case "ghtk":
     case "ghn":
+      return fetchGhnTracking(tracking);
+
+    // Các carrier khác — phase sau
+    case "ghtk":
     case "jnt":
     case "viettelpost":
     case "ninjavan":
@@ -78,6 +81,11 @@ export async function trackPackage(trackingNumber, opts = {}) {
         const spx = await fetchSpxTracking(tracking);
         if (spx.ok) return spx;
       }
+      // Mã số thuần 9–12 số: thử GHN (hay dùng dãy số)
+      if (/^\d{9,12}$/.test(tracking)) {
+        const ghn = await fetchGhnTracking(tracking);
+        if (ghn.ok) return ghn;
+      }
       return {
         ok: false,
         trackingNumber: tracking,
@@ -89,7 +97,7 @@ export async function trackPackage(trackingNumber, opts = {}) {
         events: [],
         raw: null,
         error:
-          "Chưa nhận diện được đơn vị vận chuyển. Hiện hỗ trợ tốt nhất: mã Shopee Express (SPXVN…).",
+          "Chưa nhận diện được đơn vị vận chuyển. Hỗ trợ: Shopee Express (SPXVN…), GHN (mã đơn GHN).",
       };
   }
 }
