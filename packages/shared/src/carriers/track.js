@@ -34,7 +34,7 @@ import { fetchJntTracking } from "./jnt.js";
 /**
  * Tra cứu trạng thái theo mã vận đơn.
  * @param {string} trackingNumber
- * @param {{ carrierId?: string }} [opts]
+ * @param {{ carrierId?: string, phoneLast4?: string }} [opts]
  * @returns {Promise<TrackingResult>}
  */
 export async function trackPackage(trackingNumber, opts = {}) {

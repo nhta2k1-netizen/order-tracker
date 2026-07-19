@@ -68,10 +68,12 @@ async function handleTrack(raw: string, phoneLast4?: string | null) {
   }
 
   try {
+    // phoneLast4: J&T (cũng hỗ trợ chuỗi "MÃ|1234")
     const result = await trackPackage(phone ? `${code}|${phone}` : code, {
       phoneLast4: phone || undefined,
-    });
-    // Không trả raw SPX (nặng + không cần UI)
+    } as { carrierId?: string; phoneLast4?: string });
+
+    // Không trả raw (nặng + không cần UI)
     const { raw: _raw, ...safe } = result as typeof result & { raw?: unknown };
     const detected = detectCarrier(code);
 
