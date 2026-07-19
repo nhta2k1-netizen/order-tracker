@@ -1,0 +1,17 @@
+{
+  "name": "@order-tracker/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "dependencies": {
+    "@order-tracker/db": "*",
+    "@order-tracker/shared": "*",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

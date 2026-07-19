@@ -1,0 +1,21 @@
+{
+  "name": "order-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Theo dõi đơn hàng Shopee / TikTok Shop / đa carrier VN — Web + Telegram Bot",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "bot": "npm run start -w @order-tracker/bot",
+    "bot:dev": "npm run dev -w @order-tracker/bot",
+    "api": "npm run start -w @order-tracker/api",
+    "api:dev": "npm run dev -w @order-tracker/api",
+    "web": "npm run dev -w @order-tracker/web",
+    "zalo": "npm run start -w @order-tracker/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
