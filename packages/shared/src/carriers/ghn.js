@@ -4,6 +4,7 @@
  * Body: { order_code }
  * Không cần token shop (API client public).
  */
+import { buildOrderDetails } from "../utils/order-details.js";
 
 const GHN_TRACK_URL =
   "https://fe-online-gateway.ghn.vn/order-tracking/public-api/client/tracking-logs";
@@ -104,6 +105,31 @@ export async function fetchGhnTracking(trackingNumber) {
     estimatedDelivery = formatMaybeDate(lt);
   }
 
+  const itemsRaw = Array.isArray(orderInfo.items) ? orderInfo.items : [];
+  const orderDetails = buildOrderDetails({
+    recipientName: orderInfo.to_name,
+    recipientPhone: orderInfo.to_phone,
+    recipientAddress:
+      orderInfo.to_address_v2 || orderInfo.to_address || null,
+    senderName: orderInfo.from_name,
+    senderPhone: orderInfo.from_phone,
+    senderAddress:
+      orderInfo.from_address_v2 || orderInfo.from_address || null,
+    items: itemsRaw.map((it) => ({
+      name: it?.name || it?.item_name || it?.product_name || it?.item_code,
+      quantity: it?.quantity ?? it?.qty,
+      weight: it?.weight,
+    })),
+    clientOrderCode: orderInfo.client_order_code || orderInfo.client_id,
+    note: orderInfo.note || orderInfo.required_note,
+    codAmount:
+      orderInfo.cod_amount != null
+        ? String(orderInfo.cod_amount)
+        : orderInfo.cod != null
+          ? String(orderInfo.cod)
+          : null,
+  });
+
   return {
     ok: true,
     trackingNumber: String(orderCode).toUpperCase(),
@@ -112,6 +138,7 @@ export async function fetchGhnTracking(trackingNumber) {
     currentStatus: currentStatus ? String(currentStatus) : null,
     currentStatusRaw: currentStatusRaw ? String(currentStatusRaw) : null,
     estimatedDelivery,
+    orderDetails,
     events,
     raw,
     error: null,
@@ -224,6 +251,7 @@ function empty(tracking, error) {
     currentStatus: null,
     currentStatusRaw: null,
     estimatedDelivery: null,
+    orderDetails: buildOrderDetails(),
     events: [],
     raw: null,
     error,

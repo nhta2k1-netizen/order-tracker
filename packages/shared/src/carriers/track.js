@@ -6,6 +6,7 @@ import { detectCarrier } from "./detect.js";
 import { fetchSpxTracking } from "./spx.js";
 import { fetchGhnTracking } from "./ghn.js";
 import { fetchJntTracking } from "./jnt.js";
+import { buildOrderDetails } from "../utils/order-details.js";
 
 /**
  * @typedef {object} TrackingEvent
@@ -26,6 +27,7 @@ import { fetchJntTracking } from "./jnt.js";
  * @property {string|null} currentStatus
  * @property {string|null} currentStatusRaw
  * @property {string|null} estimatedDelivery
+ * @property {import('../utils/order-details.js').OrderDetails} [orderDetails]
  * @property {TrackingEvent[]} events
  * @property {any} raw
  * @property {string|null} error
@@ -60,6 +62,7 @@ export async function trackPackage(trackingNumber, opts = {}) {
       currentStatus: null,
       currentStatusRaw: null,
       estimatedDelivery: null,
+      orderDetails: buildOrderDetails(),
       events: [],
       raw: null,
       error: "Thiếu mã vận đơn",

@@ -7,6 +7,7 @@
  *
  * Không cần API key. Parse HTML kết quả.
  */
+import { buildOrderDetails } from "../utils/order-details.js";
 
 const TRACK_URL = "https://jtexpress.vn/tracking";
 
@@ -134,6 +135,7 @@ function parseTrackingHtml(bill, html, meta = {}) {
         currentStatus: summary,
         currentStatusRaw: summary,
         estimatedDelivery: null,
+        orderDetails: buildOrderDetails(),
         events: [
           {
             status: summary,
@@ -165,6 +167,7 @@ function parseTrackingHtml(bill, html, meta = {}) {
     currentStatus: current.status || current.message,
     currentStatusRaw: current.statusRaw || current.status,
     estimatedDelivery: null,
+    orderDetails: buildOrderDetails(),
     events,
     raw: { source: "jtexpress.vn", eventCount: events.length },
     error: null,
@@ -329,6 +332,7 @@ function empty(tracking, error) {
     currentStatus: null,
     currentStatusRaw: null,
     estimatedDelivery: null,
+    orderDetails: buildOrderDetails(),
     events: [],
     raw: null,
     error,

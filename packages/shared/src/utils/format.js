@@ -1,6 +1,7 @@
 /**
  * Format kết quả tracking cho Telegram (HTML) và text thuần.
  */
+import { hasOrderDetails } from "./order-details.js";
 
 const STATUS_EMOJI = {
   delivered: "✅",
@@ -114,6 +115,13 @@ export function formatTrackingTelegram(result, opts = {}) {
     );
   }
 
+  const detailLines = formatOrderDetailsHtml(result.orderDetails);
+  if (detailLines.length) {
+    lines.push(``);
+    lines.push(`<b>📋 Thông tin đơn</b>`);
+    lines.push(...detailLines);
+  }
+
   const events = result.events || [];
   if (events.length > 0) {
     lines.push(``);
@@ -142,6 +150,63 @@ export function escapeHtml(text) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+/**
+ * @param {import('./order-details.js').OrderDetails|null|undefined} d
+ * @returns {string[]}
+ */
+function formatOrderDetailsHtml(d) {
+  if (!hasOrderDetails(d)) return [];
+  const lines = [];
+  if (d.productName) lines.push(`🛍 SP: ${escapeHtml(d.productName)}`);
+  if (d.clientOrderCode)
+    lines.push(`🧾 Mã shop: <code>${escapeHtml(d.clientOrderCode)}</code>`);
+  if (d.recipientName || d.recipientPhone || d.recipientAddress) {
+    lines.push(
+      `📍 Nhận: ${escapeHtml(
+        [d.recipientName, d.recipientPhone, d.recipientAddress]
+          .filter(Boolean)
+          .join(" · ")
+      )}`
+    );
+  }
+  if (d.senderName || d.senderAddress) {
+    lines.push(
+      `📤 Gửi: ${escapeHtml(
+        [d.senderName, d.senderAddress].filter(Boolean).join(" · ")
+      )}`
+    );
+  }
+  if (d.codAmount) lines.push(`💰 COD: ${escapeHtml(d.codAmount)}`);
+  if (d.note) lines.push(`📝 ${escapeHtml(d.note)}`);
+  return lines;
+}
+
+/**
+ * @param {import('./order-details.js').OrderDetails|null|undefined} d
+ * @returns {string[]}
+ */
+function formatOrderDetailsPlain(d) {
+  if (!hasOrderDetails(d)) return [];
+  const lines = [];
+  if (d.productName) lines.push(`🛍 SP: ${d.productName}`);
+  if (d.clientOrderCode) lines.push(`🧾 Mã shop: ${d.clientOrderCode}`);
+  if (d.recipientName || d.recipientPhone || d.recipientAddress) {
+    lines.push(
+      `📍 Nhận: ${[d.recipientName, d.recipientPhone, d.recipientAddress]
+        .filter(Boolean)
+        .join(" · ")}`
+    );
+  }
+  if (d.senderName || d.senderAddress) {
+    lines.push(
+      `📤 Gửi: ${[d.senderName, d.senderAddress].filter(Boolean).join(" · ")}`
+    );
+  }
+  if (d.codAmount) lines.push(`💰 COD: ${d.codAmount}`);
+  if (d.note) lines.push(`📝 ${d.note}`);
+  return lines;
 }
 
 /**
@@ -229,6 +294,12 @@ export function formatTrackingZalo(result = {}, opts = {}) {
     `🏷 ĐVVC: ${carrier}`,
     `📌 Hiện tại: ${result.currentStatus || "—"}`,
   ];
+  const od = formatOrderDetailsPlain(result.orderDetails);
+  if (od.length) {
+    lines.push("");
+    lines.push("📋 Thông tin đơn");
+    lines.push(...od);
+  }
   const events = result.events || [];
   if (events.length > 0) {
     lines.push("");

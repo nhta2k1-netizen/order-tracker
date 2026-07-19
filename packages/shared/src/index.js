@@ -29,6 +29,12 @@ export {
 } from "./utils/format.js";
 
 export {
+  buildOrderDetails,
+  emptyOrderDetails,
+  hasOrderDetails,
+} from "./utils/order-details.js";
+
+export {
   loadZaloTokens,
   getZaloTokenState,
   isZaloConfigured,

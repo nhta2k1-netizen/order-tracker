@@ -3,6 +3,7 @@
  * Logic ký request kế thừa từ spx-tracker.
  */
 import crypto from "crypto";
+import { buildOrderDetails } from "../utils/order-details.js";
 
 const SPX_API = "https://spx.vn/api/v2/fleet_order/tracking/search";
 const SPX_SECRET = "0ebfffe63d2a481cf57fe7d5ebdc9fd6";
@@ -193,6 +194,19 @@ export async function fetchSpxTracking(trackingNumber) {
   const currentStatus =
     translateStatus(currentStatusRaw) || events[0]?.status || currentStatusRaw;
 
+  // SPX public API ít khi trả tên SP / địa chỉ đầy đủ — map nếu có
+  const orderDetails = buildOrderDetails({
+    recipientName: data.receiver_name || data.to_name || null,
+    recipientPhone: data.receiver_phone || data.to_phone || null,
+    recipientAddress: data.receiver_address || data.to_address || null,
+    senderName: data.sender_name || data.from_name || null,
+    senderAddress: data.sender_address || data.from_address || null,
+    productName:
+      data.item_name || data.product_name || data.goods_name || null,
+    clientOrderCode: data.order_sn || data.client_order_code || null,
+    note: data.remark || data.note || null,
+  });
+
   return {
     ok: true,
     trackingNumber: data.sls_tracking_number || tracking,
@@ -201,6 +215,7 @@ export async function fetchSpxTracking(trackingNumber) {
     currentStatus,
     currentStatusRaw,
     estimatedDelivery: null,
+    orderDetails,
     events,
     raw,
     error: null,
@@ -222,6 +237,7 @@ function emptyResult(tracking, error) {
     currentStatus: null,
     currentStatusRaw: null,
     estimatedDelivery: null,
+    orderDetails: buildOrderDetails(),
     events: [],
     raw: null,
     error,
