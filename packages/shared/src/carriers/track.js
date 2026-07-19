@@ -38,9 +38,18 @@ import { fetchJntTracking } from "./jnt.js";
  * @returns {Promise<TrackingResult>}
  */
 export async function trackPackage(trackingNumber, opts = {}) {
-  const tracking = String(trackingNumber || "")
-    .trim()
-    .toUpperCase();
+  const rawInput = String(trackingNumber || "").trim();
+
+  // Tách "MÃ|1234" / "MÃ 1234" (4 số cuối SĐT — J&T)
+  let phoneLast4 = opts.phoneLast4 ? String(opts.phoneLast4).replace(/\D/g, "").slice(-4) : "";
+  let codePart = rawInput;
+  const phoneSplit = rawInput.match(/^(.+?)[|,\s]+(\d{4})\s*$/);
+  if (phoneSplit) {
+    codePart = phoneSplit[1].trim();
+    if (!phoneLast4) phoneLast4 = phoneSplit[2];
+  }
+
+  const tracking = codePart.replace(/\s+/g, "").toUpperCase();
 
   if (!tracking) {
     return {
@@ -69,10 +78,8 @@ export async function trackPackage(trackingNumber, opts = {}) {
       return fetchGhnTracking(tracking);
 
     case "jnt": {
-      // Hỗ trợ "MÃ|1234" hoặc opts.phoneLast4
-      const phoneOpt = opts.phoneLast4 || null;
-      const jnt = await fetchJntTracking(trackingNumber, {
-        phoneLast4: phoneOpt,
+      const jnt = await fetchJntTracking(tracking, {
+        phoneLast4: phoneLast4 || null,
       });
       // 12 số không ra → thử GHN (tránh nhầm carrier)
       if (!jnt.ok && /^\d{9,12}$/.test(tracking) && !/^84\d{10}$/.test(tracking)) {
@@ -97,16 +104,16 @@ export async function trackPackage(trackingNumber, opts = {}) {
       }
       // 84… 12 số: J&T
       if (/^84\d{10}$/.test(tracking)) {
-        return fetchJntTracking(trackingNumber, {
-          phoneLast4: opts.phoneLast4,
+        return fetchJntTracking(tracking, {
+          phoneLast4: phoneLast4 || null,
         });
       }
       // Mã số thuần 9–12 số: thử GHN rồi J&T
       if (/^\d{9,12}$/.test(tracking)) {
         const ghn = await fetchGhnTracking(tracking);
         if (ghn.ok) return ghn;
-        const jnt = await fetchJntTracking(trackingNumber, {
-          phoneLast4: opts.phoneLast4,
+        const jnt = await fetchJntTracking(tracking, {
+          phoneLast4: phoneLast4 || null,
         });
         if (jnt.ok) return jnt;
         return ghn;
